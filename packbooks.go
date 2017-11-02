@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/anaskhan96/soup"
 
@@ -13,7 +14,7 @@ import (
 type bookInfoMessage struct {
 	Title       string
 	Description string
-	ImageUrl    string
+	ImageURL    string
 }
 
 const (
@@ -37,14 +38,18 @@ func crawlURL() bookInfoMessage {
 
 	image := doc.Find("div", "class", "dotd-main-book-image float-left").Find("noscript")
 	i := strings.TrimSpace(image.Text())
-	i_split := strings.Split(i, "\"")
-	book.ImageUrl = strings.Trim(i_split[1], "//")
-	log.Printf("%d %q", len(book.ImageUrl), book.ImageUrl)
+	iSplit := strings.Split(i, "\"")
+	book.ImageURL = strings.Trim(iSplit[1], "//")
+	log.Printf("%d %q", len(book.ImageURL), book.ImageURL)
 
 	description := doc.Find("div", "class", "dotd-main-book-summary float-left").Find("div").FindNextElementSibling().FindNextElementSibling().FindNextElementSibling()
 	book.Description = strings.TrimSpace(description.Text())
 	log.Printf("%d %q", len(book.Description), book.Description)
 	return book
+}
+
+func checkBook(chatID int64) {
+
 }
 
 func main() {
@@ -61,8 +66,9 @@ func main() {
 	u.Timeout = 60 //24*60* 60
 	//6234638
 
+	var chatID int64
+
 	updates, err := bot.GetUpdatesChan(u)
-	var chatID int64 = 0
 	for update := range updates {
 		if update.Message == nil {
 			continue
@@ -70,17 +76,25 @@ func main() {
 
 		chatID = update.Message.Chat.ID
 
-		log.Println("-------------------------------")
-		book := crawlURL()
-		log.Println("-------------------------------")
-		//log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+		ticker := time.NewTicker(time.Millisecond * 60 * 1000)
 
-		var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing: \n\n" +
-			"📖 " + book.Title + "\n" +
-			"🔎 " + book.Description + "\n" +
-			"➡️ " + url)
+		go func() {
+			for t := range ticker.C {
+				fmt.Println("Tick at", t)
+				log.Println("-------------------------------")
+				book := crawlURL()
+				log.Println("-------------------------------")
+				//log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		msg := tgbotapi.NewMessage(chatID, text)
-		bot.Send(msg)
+				var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing: \n\n" +
+					"📖 " + book.Title + "\n" +
+					"🔎 " + book.Description + "\n" +
+					"➡️ " + url)
+
+				msg := tgbotapi.NewMessage(chatID, text)
+				bot.Send(msg)
+			}
+		}()
+
 	}
 }
