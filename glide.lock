@@ -1,8 +1,15 @@
 hash: cfbca9b8ba618985c384f8628f7f3b552391f073633fd1750267afe25d6c767d
-updated: 2017-11-02T11:34:20.768369168+01:00
+updated: 2017-11-02T13:05:04.601462045+01:00
 imports:
+- name: github.com/anaskhan96/soup
+  version: 57bc26db319a1489e4b356a974d8b74c0d91244b
 - name: github.com/technoweenie/multipartstreamer
   version: a90a01d73ae432e2611d178c18367fbaa13e0154
+- name: golang.org/x/net
+  version: 3da985ce5951d99de868be4385f21ea6c2b22f24
+  subpackages:
+  - html
+  - html/atom
 - name: gopkg.in/telegram-bot-api.v4
   version: 0a57807db79efce7f6719fbb2c0e0f83fda79aec
 testImports: []
