@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"strings"
-	"time"
 
 	"github.com/anaskhan96/soup"
 
@@ -45,6 +46,7 @@ func crawlURL() bookInfoMessage {
 	description := doc.Find("div", "class", "dotd-main-book-summary float-left").Find("div").FindNextElementSibling().FindNextElementSibling().FindNextElementSibling()
 	book.Description = strings.TrimSpace(description.Text())
 	log.Printf("%d %q", len(book.Description), book.Description)
+
 	return book
 }
 
@@ -53,7 +55,21 @@ func checkBook(chatID int64) {
 }
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("asdf")
+
+	telegramBotID := os.Getenv("TELEGRAM_BOT_ID")
+	telegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
+
+	if telegramBotID == "" || telegramChatID == "" {
+		log.Println("ERROR: Missing TELEGRAM_BOT_ID or TELEGRAM_CHAT_ID environment variables")
+	}
+
+	chatID, err := strconv.ParseInt(telegramChatID, 10, 64)
+	if err != nil {
+		log.Println("ERROR: TELEGRAM_CHAT_ID not a valid environment variable", err)
+	}
+	log.Println(chatID)
+
+	bot, err := tgbotapi.NewBotAPI(telegramBotID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -62,39 +78,13 @@ func main() {
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60 //24*60* 60
-	//6234638
+	book := crawlURL()
+	var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing: 🎁 \n\n" +
+		"📖 " + book.Title + "\n" +
+		"🔎 " + book.Description + "\n" +
+		"👉 " + url)
 
-	var chatID int64
+	msg := tgbotapi.NewMessage(chatID, text)
+	bot.Send(msg)
 
-	updates, err := bot.GetUpdatesChan(u)
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-
-		chatID = update.Message.Chat.ID
-
-		ticker := time.NewTicker(time.Millisecond * 60 * 1000)
-
-		go func() {
-			for t := range ticker.C {
-				fmt.Println("Tick at", t)
-				log.Println("-------------------------------")
-				book := crawlURL()
-				log.Println("-------------------------------")
-				//log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-				var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing: \n\n" +
-					"📖 " + book.Title + "\n" +
-					"🔎 " + book.Description + "\n" +
-					"➡️ " + url)
-
-				msg := tgbotapi.NewMessage(chatID, text)
-				bot.Send(msg)
-			}
-		}()
-
-	}
 }
