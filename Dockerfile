@@ -13,3 +13,5 @@ RUN chmod +x /bin/PackBooksBotNotifier
 
 CMD crond -l 2 -f
 
+#For deploying only the image.
+#FROM myhay/packt-free-learning:1
