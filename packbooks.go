@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/anaskhan96/soup"
 
@@ -16,6 +17,7 @@ type bookInfoMessage struct {
 	Title       string
 	Description string
 	ImageURL    string
+	TimeLeft    string
 }
 
 const (
@@ -46,6 +48,17 @@ func crawlURL() bookInfoMessage {
 	description := doc.Find("div", "class", "dotd-main-book-summary float-left").Find("div").FindNextElementSibling().FindNextElementSibling().FindNextElementSibling()
 	book.Description = strings.TrimSpace(description.Text())
 	log.Printf("%d %q", len(book.Description), book.Description)
+
+	timeNow := time.Now().Unix()
+	timeLimitMap := doc.Find("span", "class", "packt-js-countdown")
+
+	timeLimit, err := strconv.ParseInt(timeLimitMap.Attrs()["data-countdown-to"], 10, 64)
+	if err != nil {
+		log.Println("ERROR: Failed to convert timeLimit.", err)
+		return book
+	}
+	timeLeft := time.Unix(timeLimit-timeNow, 0)
+	book.TimeLeft = fmt.Sprintf("%02d:%02d:%02d", timeLeft.Hour(), timeLeft.Minute(), timeLeft.Second())
 
 	return book
 }
@@ -79,9 +92,10 @@ func main() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	book := crawlURL()
-	var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing: 🎁 \n\n" +
+	var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing 🎁 \n\n" +
 		"📖 " + book.Title + "\n" +
 		"🔎 " + book.Description + "\n" +
+		"⌛️ " + book.TimeLeft + "\n" +
 		"👉 " + url)
 
 	msg := tgbotapi.NewMessage(chatID, text)
