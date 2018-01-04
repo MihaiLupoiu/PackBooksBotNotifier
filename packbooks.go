@@ -13,6 +13,8 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 )
 
+var errorRetrevingBoot string
+
 type bookInfoMessage struct {
 	Title       string
 	Description string
@@ -30,24 +32,38 @@ func crawlURL() bookInfoMessage {
 
 	if err != nil {
 		log.Println("ERROR: Failed to crawl \"" + url + "\"")
+		errorRetrevingBoot = "Error executing crawl."
 		return book
 	}
 
 	doc := soup.HTMLParse(resp)
 
 	title := doc.Find("div", "class", "dotd-title").Find("h2")
+	if title.Text() == "" {
+		errorRetrevingBoot = "Error retreving book title."
+		return book
+	}
+
 	book.Title = strings.TrimSpace(title.Text())
-	log.Printf("%d %q", len(book.Title), book.Title)
+	log.Printf("%d %q\n", len(book.Title), book.Title)
 
 	image := doc.Find("div", "class", "dotd-main-book-image float-left").Find("noscript")
+	if image.Text() == "" {
+		errorRetrevingBoot = "Error retreving book image."
+		return book
+	}
 	i := strings.TrimSpace(image.Text())
 	iSplit := strings.Split(i, "\"")
 	book.ImageURL = strings.Trim(iSplit[1], "//")
-	log.Printf("%d %q", len(book.ImageURL), book.ImageURL)
+	log.Printf("%d %q\n", len(book.ImageURL), book.ImageURL)
 
 	description := doc.Find("div", "class", "dotd-main-book-summary float-left").Find("div").FindNextElementSibling().FindNextElementSibling().FindNextElementSibling()
 	book.Description = strings.TrimSpace(description.Text())
-	log.Printf("%d %q", len(book.Description), book.Description)
+	if description.Text() == "" {
+		errorRetrevingBoot = "Error retreving book description."
+		return book
+	}
+	log.Printf("%d %q\n", len(book.Description), book.Description)
 
 	timeNow := time.Now().Unix()
 	timeLimitMap := doc.Find("span", "class", "packt-js-countdown")
@@ -72,6 +88,8 @@ func main() {
 	telegramBotID := os.Getenv("TELEGRAM_BOT_ID")
 	telegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
 
+	errorRetrevingBoot = ""
+
 	if telegramBotID == "" || telegramChatID == "" {
 		log.Println("ERROR: Missing TELEGRAM_BOT_ID or TELEGRAM_CHAT_ID environment variables")
 	}
@@ -90,15 +108,23 @@ func main() {
 	bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
-
+	var text string
 	book := crawlURL()
-	var text = fmt.Sprintf("Check out today's free ebook from Packt Publishing 🎁 \n\n" +
-		"📖 " + book.Title + "\n" +
-		"🔎 " + book.Description + "\n" +
-		"⌛️ " + book.TimeLeft + "\n" +
-		"👉 " + url)
+
+	if errorRetrevingBoot == "" {
+		text = fmt.Sprintf("\nCheck out today's free ebook from Packt Publishing 🎁 \n\n" +
+			"📖 " + book.Title + "\n" +
+			"🔎 " + book.Description + "\n" +
+			"⌛️ " + book.TimeLeft + "\n" +
+			"👉 " + url)
+	} else {
+		log.Printf("%s", errorRetrevingBoot)
+		text = fmt.Sprintf("\n⚠️ An error ocurred in retreving today's free ebook from Packt Publishing ⚠️ \n\n" +
+			"For more details, please check Packt Publishing web page. 👉 " + url)
+	}
 
 	msg := tgbotapi.NewMessage(chatID, text)
+	msg.DisableWebPagePreview = true
 	bot.Send(msg)
 
 }
