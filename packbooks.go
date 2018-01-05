@@ -8,12 +8,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const (
-	url = "https://www.packtpub.com/packt/offers/free-learning"
-)
-
 func main() {
 
+	url := os.Getenv("PACKTURL")
 	crawlpackt.Init(url)
 
 	telegramBotID := os.Getenv("TELEGRAM_BOT_ID")
