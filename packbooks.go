@@ -10,7 +10,7 @@ import (
 
 	"github.com/anaskhan96/soup"
 
-	"gopkg.in/telegram-bot-api.v4"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 var errorRetrevingBoot string
@@ -108,6 +108,7 @@ func main() {
 	bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
+
 	var text string
 	book := crawlURL()
 
