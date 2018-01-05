@@ -3,6 +3,8 @@ MAINTAINER Mihai Lupoiu <mihai.alexandru.lupoiu@gmail.com>
 
 ENV TELEGRAM_CHAT_ID=@telegram-chat-id
 ENV TELEGRAM_BOT_ID=@telegram-bot-id
+ENV PACKT_URL=https://www.packtpub.com/packt/offers/free-learning
+
 
 RUN apk --no-cache add ca-certificates && update-ca-certificates
 

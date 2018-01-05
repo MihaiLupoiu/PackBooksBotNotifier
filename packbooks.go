@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	url := os.Getenv("PACKTURL")
+	url := os.Getenv("PACKT_URL")
 	crawlpackt.Init(url)
 
 	telegramBotID := os.Getenv("TELEGRAM_BOT_ID")
