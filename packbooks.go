@@ -83,6 +83,7 @@ func checkBook(chatID int64) {
 
 }
 
+//@packtFreeLearning
 func main() {
 
 	telegramBotID := os.Getenv("TELEGRAM_BOT_ID")
@@ -92,13 +93,8 @@ func main() {
 
 	if telegramBotID == "" || telegramChatID == "" {
 		log.Println("ERROR: Missing TELEGRAM_BOT_ID or TELEGRAM_CHAT_ID environment variables")
+		os.Exit(1)
 	}
-
-	chatID, err := strconv.ParseInt(telegramChatID, 10, 64)
-	if err != nil {
-		log.Println("ERROR: TELEGRAM_CHAT_ID not a valid environment variable", err)
-	}
-	log.Println(chatID)
 
 	bot, err := tgbotapi.NewBotAPI(telegramBotID)
 	if err != nil {
@@ -121,11 +117,12 @@ func main() {
 	} else {
 		log.Printf("%s", errorRetrevingBoot)
 		text = fmt.Sprintf("\n⚠️ An error ocurred in retreving today's free ebook from Packt Publishing ⚠️ \n\n" +
-			"For more details, please check Packt Publishing web page. 👉 " + url)
+			"Meanwhile we fix the issue, please check Packt Publishing web page. 👉 " + url)
 	}
 
-	msg := tgbotapi.NewMessage(chatID, text)
+	msg := tgbotapi.NewMessageToChannel(telegramChatID, text)
 	msg.DisableWebPagePreview = true
 	bot.Send(msg)
-
+	// A free eBook every day notification. | Not affiliated with Packt Publishing | maintained by @myhay
+	// Packt Free Learning - Free Programming Ebooks
 }
