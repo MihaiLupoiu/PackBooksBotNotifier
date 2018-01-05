@@ -1,4 +1,6 @@
 package: github.com/MihaiLupoiu/PackBooksBotNotifier
 import:
-- package: gopkg.in/telegram-bot-api.v4
-  version: ^4.6.0
+- package: github.com/anaskhan96/soup
+  version: ~1.0.1
+- package: github.com/go-telegram-bot-api/telegram-bot-api
+  version: ~4.6.1
